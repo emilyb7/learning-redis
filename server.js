@@ -118,5 +118,5 @@ const handler = (request, response) => {
   const server = Http.createServer(handler);
 
   server.listen(8080, () => {
-    console.log(`server running`);
-  });
+    console.log(`server running!`);
+  })
