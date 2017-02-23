@@ -1,7 +1,7 @@
-function get(url) {
+function request(url, method, payload) {
   return new Promise(function(resolve, reject) {
     var req = new XMLHttpRequest();
-    req.open('GET', url);
+    req.open((method || 'GET'), url);
 
     req.onload = function() {
       if (req.status == 200) { resolve(req.response); }
@@ -10,11 +10,11 @@ function get(url) {
 
     req.onerror = function() { reject(Error("Network Error")); };
 
-    req.send();
+    req.send(payload);
   });
 }
 
-get('/items').then(function(response) {
+request('/items').then(function(response) {
   var data = JSON.parse(response);
   var items = data.items;
   var scores = data.scores;
@@ -30,7 +30,26 @@ get('/items').then(function(response) {
   itemList.forEach(function(item) { document.querySelector('ul').appendChild(item); });
 }, function(error) {
   console.error("Failed!", error);
-})
+});
+
+function removeRequest(payload) {
+  request('/remove', 'POST', payload).then(function(response) {
+    console.log(response);
+    var data = JSON.parse(response);
+    var items = data.items;
+    var scores = data.scores;
+    var itemList = items.filter(function(item) {
+      return !!item;
+    }).map(function(item, index){
+      var listItem = document.createElement('li');
+      listItem.textContent = item;
+      listItem.id = scores[index];
+      listItem.addEventListener("click", remove);
+      return listItem;
+    })
+    itemList.forEach(function(item) { document.querySelector('ul').appendChild(item); });
+  })
+}
 
 function remove () {
   var item = this.id;
@@ -38,24 +57,7 @@ function remove () {
   while (list.firstChild) {
     list.removeChild(list.firstChild);
   }
-  var removeRequest = new XMLHttpRequest();
-  removeRequest.onreadystatechange = function () {
-    if (removeRequest.readyState == 4 && removeRequest.status == 200) {
-      var data = JSON.parse(removeRequest.responseText);
-      var items = data.items;
-      var scores = data.scores;
-      items.forEach(function(item, index) {
-        if (item) {
-          var listItem = document.createElement('li');
-          listItem.textContent = item;
-          listItem.id = scores[index];
-          list.appendChild(listItem);
-          listItem.addEventListener("click", remove);
-        }
-      });
-
-    }
-  }
-  removeRequest.open("POST", "/remove", true);
-  removeRequest.send(JSON.stringify({ item: item, }));
+  var payload = JSON.stringify({ item: item, });
+  console.log(payload);
+  removeRequest(payload);
 }

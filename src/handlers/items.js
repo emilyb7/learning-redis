@@ -1,16 +1,13 @@
 const client = require('../redis.js');
 
+const listFaves = require('./../redis/list-faves.js');
+
 module.exports = (request, response) => {
-  client.zrange("favouritesSet", 0, -1, "WITHSCORES", (err, reply) => {
-    if(err) { console.log(err); }
-    else {
-      const items = reply.filter((item, index) => index % 2 == 0);
-      const scores = reply.filter((item, index) => index % 2 > 0);
-      const data = {
-        items: items,
-        scores: scores,
-      };
+  listFaves(null, (err, data) => {
+    if (err) {
+      console.log(err);
+    } else {
       response(JSON.stringify(data));
     }
-  })
+  });
 };
